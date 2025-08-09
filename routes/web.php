@@ -4,6 +4,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ChatController;
+use App\Http\Controllers\AdminController;
+use App\Http\Controllers\SearchController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ConversationController;
 
@@ -18,6 +20,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/inbox', [ChatController::class, 'inbox'])->name('inbox');
     Route::get('/chat/{conversationId}', [ChatController::class, 'chatView'])->name('chat.view');
     Route::post('/chat/{conversationId}/send', [ChatController::class, 'sendMessage'])->name('send.message');
+    Route::get('/search', [SearchController::class, 'search'])->name('search');
 
     Route::post('/logout', function () {
         Auth::logout();  // Log the user out
@@ -29,6 +32,10 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/profile', [ProfileController::class, 'showProfile'])->name('profile.show');
     Route::post('/profile', [ProfileController::class, 'updateProfile'])->name('profile.update');
+
+    Route::middleware(['isAdmin'])->group(function () {
+        Route::get('/admin', [AdminController::class, 'index'])->name('admin.dashboard');
+    });
 
 
 });

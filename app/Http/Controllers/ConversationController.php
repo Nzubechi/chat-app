@@ -33,5 +33,16 @@ class ConversationController extends Controller
         // Redirect to the inbox or the newly created conversation
         return redirect()->route('chat.view', $conversation->id);
     }
+
+    public function addParticipants(Request $request, $conversationId)
+    {
+        $conversation = Conversation::findOrFail($conversationId);
+
+        $userIds = $request->input('user_ids'); // Array of user IDs to add
+
+        $conversation->users()->syncWithoutDetaching($userIds); // Add users without detaching existing ones
+
+        return back()->with('success', 'Participants added successfully!');
+    }
 }
 

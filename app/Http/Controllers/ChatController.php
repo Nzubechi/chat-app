@@ -4,10 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\Message;
 use App\Events\MessageSent;
+use App\Events\TypingEvent;
 use App\Models\Conversation;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
+use App\Notifications\NewMessageNotification;
 
 class ChatController extends Controller
 {
@@ -32,6 +34,13 @@ class ChatController extends Controller
         return view('chat.view', compact('conversation', 'messages'));
     }
 
+    public function sendTypingIndicator(Request $request, $conversationId)
+    {
+        broadcast(new TypingEvent($conversationId, Auth::user()->name));
+
+        return response()->json(['status' => 'success']);
+    }
+
     public function sendMessage(Request $request, $conversationId)
     {
         // Validate the message input
@@ -45,6 +54,19 @@ class ChatController extends Controller
             'conversation_id' => $conversationId,
             'content' => $request->message,
         ]);
+
+        // Handle file upload
+        if ($request->hasFile('file')) {
+            $path = $request->file('file')->store('chat_files', 'public');
+            $message->file_path = $path;
+            $message->save();
+        }
+
+        $message->conversation->users->each(function ($user) use ($message) {
+            if ($user->id !== Auth::id()) {
+                $user->notify(new NewMessageNotification($message));
+            }
+        });
 
         // Broadcast the message event (real-time update)
         broadcast(new MessageSent($message));

@@ -15,6 +15,7 @@ return new class extends Migration {
             $table->foreignId('user_id')->constrained()->onDelete('cascade');  // The user sending the message
             $table->foreignId('conversation_id')->constrained()->onDelete('cascade');  // The conversation the message belongs to
             $table->text('content');  // The message content
+            $table->string('file_path')->nullable();
             $table->timestamps();
         });
     }

@@ -1,40 +1,8 @@
 @extends('layouts.app')
 
 @section('content')
-@php
-    $user = auth()->user();
-@endphp
-    <div class="max-w-4xl mx-auto px-4 py-8">
-        <!-- Conversation Title and ID -->
+    <div class="max-w-4xl mx-auto px-4">
         <h2 class="text-2xl mb-4">Conversation: {{ $conversation->name }} - {{ $conversation->id }}</h2>
-
-        <!-- Search Form (Optional placement) -->
-        <div class="mb-6">
-            <h3 class="text-lg font-semibold mb-4">Search Messages</h3>
-            <form method="GET" action="{{ route('search') }}">
-                <input type="text" name="query" placeholder="Search conversations and messages"
-                    class="w-full p-3 border border-gray-300 rounded-md mt-4">
-                <button type="submit" class="w-full bg-blue-600 text-white p-3 rounded mt-4">Search</button>
-            </form>
-        </div>
-
-        <!-- Add Participants Form (Visible to Admin or relevant roles) -->
-        @if ($user->role === 'admin')
-            <!-- Optional: Show form to admins only -->
-            <div class="mb-6">
-                <h3 class="text-lg font-semibold mb-4">Add Participants to Conversation</h3>
-                <form method="POST" action="{{ route('conversation.addParticipants', $conversation->id) }}">
-                    @csrf
-                    <select name="user_ids[]" multiple class="w-full p-3 mt-2 border border-gray-300 rounded-md">
-                        @foreach ($allUsers as $user)
-                            <option value="{{ $user->id }}">{{ $user->name }}</option>
-                        @endforeach
-                    </select>
-                    <button type="submit" class="w-full bg-blue-600 text-white p-3 rounded-md mt-4">Add
-                        Participants</button>
-                </form>
-            </div>
-        @endif
 
         <!-- Messages Container -->
         <div class="space-y-4 mb-4" id="message-container">
@@ -46,7 +14,7 @@
             @endforeach
         </div>
 
-        <!-- Message Form (Send New Message) -->
+        <!-- Message Form -->
         <form id="messageForm">
             @csrf
             <input type="text" id="messageInput" name="message" placeholder="Type your message"
@@ -62,6 +30,7 @@
                 .listen('MessageSent', (event) => {
                     const message = event.message;
                     console.log("Message:", event);
+
 
                     // Create a new message element and append to the container
                     const messageElement = document.createElement('div');
@@ -80,12 +49,12 @@
                     console.error('Subscription error:', error);
                 });
 
-            window.Echo.channel(`conversation.{{ $conversation->id }}`)
+            window.Echo.channel('conversation.' + conversationId)
                 .listen('TypingEvent', (event) => {
                     document.getElementById('typing-indicator').innerText = `${event.user.name} is typing...`;
                 });
 
-            window.Echo.private(`user.'{{ $user->id }}`)
+            window.Echo.private('user.' + userId)
                 .listen('NewMessageNotification', (event) => {
                     // Display a notification for the new message
                     alert("event.message.content");
