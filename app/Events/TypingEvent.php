@@ -39,4 +39,11 @@ class TypingEvent implements ShouldBroadcast
     {
         return new Channel('conversation.' . $this->conversation->id);
     }
+
+    public function broadcastWith()
+    {
+        return [
+            'conversation' => $this->conversation,
+        ];
+    }
 }

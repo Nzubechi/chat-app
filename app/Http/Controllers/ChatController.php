@@ -46,38 +46,62 @@ class ChatController extends Controller
 
     public function sendMessage(Request $request, $conversationId)
     {
-        // Validate the message input
-        $request->validate([
-            'message' => 'required|string|max:1000',
-            'file' => 'nullable|file|mimes:jpeg,png,jpg,pdf,docx|max:2048', // Validate file types and size
-        ]);
+        try {
+            // Validate the message input
+            $request->validate([
+                'message' => 'required|string|max:1000', // Make the file optional
+            ]);
 
-        // Create a new message in the database
-        $message = Message::create([
-            'user_id' => Auth::id(),
-            'conversation_id' => $conversationId,
-            'content' => $request->message,
-        ]);
-
-        // Handle file upload
-        if ($request->hasFile('file')) {
-            $path = $request->file('file')->store('chat_files', 'public');
-            $message->file_path = $path;
-            $message->save();
-        }
-
-        $message->conversation->users->each(function ($user) use ($message) {
-            if ($user->id !== Auth::id()) {
-                $user->notify(new NewMessageNotification($message));
+            if ($request->hasFile('file')) {
+                $request->validate([
+                    'file' => 'file|mimes:jpeg,png,jpg,pdf,docx|max:2048',
+                ]);
             }
-        });
 
-        // Broadcast the message event (real-time update)
-        broadcast(new MessageSent($message));
+            // Create a new message in the database
+            $message = Message::create([
+                'user_id' => Auth::id(),
+                'conversation_id' => $conversationId,
+                'content' => $request->message,
+            ]);
 
-        // Return JSON response after the message is sent
-        return response()->json(['status' => 'Message sent successfully!', 'message' => $message]);
+            // Handle file upload if a file is provided
+            if ($request->hasFile('file')) {
+                $path = $request->file('file')->store('chat_files', 'public');
+                $message->file_path = $path;
+                $message->save();
+            }
+
+            // Notify users in the conversation (excluding the sender)
+            $message->conversation->users->each(function ($user) use ($message) {
+                if ($user->id !== Auth::id()) {
+                    $user->notify(new NewMessageNotification($message));
+                }
+            });
+
+            // Broadcast the message event (real-time update)
+            broadcast(new MessageSent($message));
+
+            // Return a successful response with the message data
+            return response()->json([
+                'status' => 'Message sent successfully!',
+                'message' => $message
+            ]);
+
+        } catch (\Exception $e) {
+            // Log the error for debugging
+            Log::error('Error sending message: ' . $e->getMessage());
+
+            // Return a response with the error message
+            return response()->json([
+                'status' => 'error',
+                'message' => 'There was an issue sending the message. Please try again later.',
+                'error' => $e->getMessage(), // Include the error message for debugging
+            ], 500); // 500 status code for internal server error
+        }
     }
+
+
 
 
 }

@@ -6,10 +6,23 @@
     @endphp
     <div class="max-w-4xl mx-auto px-4 py-8">
         <!-- Conversation Title and ID -->
-        <h2 class="text-2xl mb-4">Conversation: {{ $conversation->name }}</h2>
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-2xl">Conversation: {{ $conversation->name }}</h2>
 
-        <!-- Search Form (Optional placement) -->
-        <div class="mb-6">
+            <!-- Toggle Buttons for Search and Add Participants Form -->
+            <div class="space-x-4">
+                <button id="searchToggleButton" class="bg-gray-800 text-white p-2 text-sm rounded-md">
+                    Search Messages
+                </button>
+                <button id="addParticipantsToggleButton" class="bg-gray-600 text-white p-2 text-sm rounded-md">
+                    Add Participants
+                </button>
+            </div>
+        </div>
+
+
+        <!-- Search Form (Initially Hidden) -->
+        <div id="searchForm" class="hidden mb-6">
             <h3 class="text-lg font-semibold mb-4">Search Messages</h3>
             <form method="GET" action="{{ route('search') }}">
                 <input type="text" name="query" placeholder="Search conversations and messages"
@@ -18,10 +31,9 @@
             </form>
         </div>
 
-        <!-- Add Participants Form (Visible to Admin or relevant roles) -->
+        <!-- Add Participants Form (Initially Hidden) -->
         @if ($user->role === 'admin')
-            <!-- Optional: Show form to admins only -->
-            <div class="mb-6">
+            <div id="addParticipantsForm" class="hidden mb-6">
                 <h3 class="text-lg font-semibold mb-4">Add Participants to Conversation</h3>
                 <form method="POST" action="{{ route('conversation.addParticipants', $conversation->id) }}">
                     @csrf
@@ -36,37 +48,70 @@
             </div>
         @endif
 
-        <!-- Messages Container -->
-        <div class="space-y-4 mb-4" id="message-container">
-            @foreach ($messages as $message)
-                <div class="p-4 bg-gray-200 rounded shadow" id="message-{{ $message->id }}">
-                    <strong>{{ $message->user->name }}: </strong>
-                    <p>{{ $message->content }}</p>
-                    @if ($message->file_path)
-                        <div class="mt-2">
-                            <a href="{{ asset('storage/' . $message->file_path) }}" target="_blank"
-                                class="text-blue-600">View File</a>
-                        </div>
-                    @endif
-                </div>
-            @endforeach
+        <div class="flex flex-col h-[calc(100vh-280px)]"> <!-- Adjusting height between fixed navbar and footer -->
+            <!-- Messages Container (Top, fills the remaining space) -->
+            <div class="space-y-4 mb-4 flex-grow overflow-y-auto max-h-[calc(100vh-160px)]" id="message-container">
+                @foreach ($messages as $message)
+                    <div class="p-4 bg-gray-200 rounded shadow" id="message-{{ $message->id }}">
+                        <strong>{{ $message->user->name }}: </strong>
+                        <p>{{ $message->content }}</p>
+                        @if ($message->file_path)
+                            <div class="mt-2">
+                                <a href="{{ asset('storage/' . $message->file_path) }}" target="_blank"
+                                    class="text-blue-600">View File</a>
+                            </div>
+                        @endif
+                    </div>
+                @endforeach
+            </div>
+
+            <!-- Message Form (Bottom, stays at the bottom of the remaining space) -->
+            <form id="messageForm" method="POST" enctype="multipart/form-data" class="flex items-center py-4 bg-white">
+                @csrf
+
+                <!-- Message Input -->
+                <input type="text" id="messageInput" name="message" placeholder="Type your message"
+                    class="p-2 w-full border border-gray-300 rounded-md" required>
+
+                <!-- File Input for Attachments (Hidden, triggered by button) -->
+                <input type="file" id="fileInput" name="file" class="hidden" onchange="updateFileName()">
+
+                <!-- Custom File Upload Button -->
+                <button type="button" id="fileButton" class="bg-slate-500 text-white p-2 rounded-md mx-2">
+                    Upload
+                </button>
+
+                <!-- Send Button -->
+                <button type="submit" class="bg-blue-600 text-white p-2 rounded-md">Send</button>
+            </form>
         </div>
 
-        <!-- Message Form (Send New Message) -->
-        <form id="messageForm" method="POST" enctype="multipart/form-data">
-            @csrf
-            <input type="text" id="messageInput" name="message" placeholder="Type your message"
-                class="w-full p-2 border border-gray-300 rounded mt-2" required>
 
-            <!-- File Input for Attachments -->
-            <input type="file" id="fileInput" name="file" class="mt-2 p-3 rounded-md">
+        <script>
+            // Trigger the file input when the "Choose File" button is clicked
+            document.getElementById('fileButton').addEventListener('click', function() {
+                document.getElementById('fileInput').click();
+            });
 
-            <button type="submit" class="w-full bg-blue-600 text-white p-2 rounded mt-2">Send</button>
-        </form>
+            // Optionally, update the file button text when a file is chosen (you can display the file name)
+            function updateFileName() {
+                const fileInput = document.getElementById('fileInput');
+                const fileButton = document.getElementById('fileButton');
+                if (fileInput.files.length > 0) {
+                    fileButton.innerText = fileInput.files[0].name;
+                } else {
+                    fileButton.innerText = 'Choose File';
+                }
+            }
+        </script>
+
+
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            messageContainer = document.getElementById('message-container')
+            messageContainer.scrollTop = messageContainer.scrollHeight;
             // Subscribe to the conversation channel using Echo
             window.Echo.channel(`conversation.{{ $conversation->id }}`)
                 .listen('MessageSent', (event) => {
@@ -83,11 +128,13 @@
                     // If there is a file, display the download link
                     if (message.file_path) {
                         messageElement.innerHTML +=
-                            `<div class="mt-2"><a href="${message.file_path}" target="_blank" class="text-blue-600">View File</a></div>`;
+                            `<div class="mt-2"><a href="{{ asset('storage/' . $message->file_path) }}" target="_blank" class="text-blue-600">View File</a></div>`;
                     }
 
                     // Append new message to the message container
-                    document.getElementById('message-container').appendChild(messageElement);
+                    messageContainer = document.getElementById('message-container')
+                    messageContainer.appendChild(messageElement);
+                    messageContainer.scrollTop = messageContainer.scrollHeight;
                 })
                 .subscribed(() => {
                     console.log('Successfully subscribed to the conversation channel.');
@@ -141,6 +188,28 @@
                         console.error('Error sending message:', error);
                     });
             });
+        });
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Toggle visibility of the Search Form
+            const searchToggleButton = document.getElementById('searchToggleButton');
+            const searchForm = document.getElementById('searchForm');
+
+            searchToggleButton.addEventListener('click', function() {
+                searchForm.classList.toggle('hidden');
+            });
+
+            // Toggle visibility of the Add Participants Form
+            const addParticipantsToggleButton = document.getElementById('addParticipantsToggleButton');
+            const addParticipantsForm = document.getElementById('addParticipantsForm');
+
+            addParticipantsToggleButton.addEventListener('click', function() {
+                addParticipantsForm.classList.toggle('hidden');
+            });
+
+            // The rest of your existing code for Echo, message submission, etc.
         });
     </script>
 @endsection

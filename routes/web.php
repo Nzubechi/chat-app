@@ -15,6 +15,7 @@ Route::post('/signup', [AuthController::class, 'signup'])->name('signup.submit')
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
 
+
 // Protected Routes
 Route::middleware('auth')->group(function () {
     Route::get('/inbox', [ChatController::class, 'inbox'])->name('inbox');

@@ -10,6 +10,10 @@ class AuthController extends Controller
 {
     public function showSignupForm()
     {
+        if (Auth::check()) {
+            // Redirect to inbox if user is already logged in
+            return redirect()->route('inbox');
+        }
         return view('auth.signup');
     }
 
@@ -34,6 +38,10 @@ class AuthController extends Controller
 
     public function showLoginForm()
     {
+        if (Auth::check()) {
+            // Redirect to inbox if user is already logged in
+            return redirect()->route('inbox');
+        }
         return view('auth.login');
     }
 
