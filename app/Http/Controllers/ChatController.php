@@ -6,6 +6,7 @@ use App\Models\Message;
 use App\Events\MessageSent;
 use App\Events\TypingEvent;
 use App\Models\Conversation;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
@@ -18,7 +19,8 @@ class ChatController extends Controller
     {
         // Fetch all conversations with associated users
         $conversations = Conversation::with('users')->get();
-        return view('chat.inbox', compact('conversations'));
+        $allusers = User::all();
+        return view('chat.inbox', compact('conversations', 'allusers'));
     }
 
     // Display the individual chat view for a conversation
@@ -29,9 +31,10 @@ class ChatController extends Controller
 
         // Fetch messages associated with this conversation
         $messages = $conversation->messages;
+        $allusers = User::all();
 
         // Return the chat view with the conversation and messages
-        return view('chat.view', compact('conversation', 'messages'));
+        return view('chat.view', compact('conversation', 'messages', 'allusers'));
     }
 
     public function sendTypingIndicator(Request $request, $conversationId)
@@ -46,6 +49,7 @@ class ChatController extends Controller
         // Validate the message input
         $request->validate([
             'message' => 'required|string|max:1000',
+            'file' => 'nullable|file|mimes:jpeg,png,jpg,pdf,docx|max:2048', // Validate file types and size
         ]);
 
         // Create a new message in the database

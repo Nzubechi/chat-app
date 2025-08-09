@@ -1,12 +1,12 @@
 @extends('layouts.app')
 
 @section('content')
-@php
-    $user = auth()->user();
-@endphp
+    @php
+        $user = auth()->user();
+    @endphp
     <div class="max-w-4xl mx-auto px-4 py-8">
         <!-- Conversation Title and ID -->
-        <h2 class="text-2xl mb-4">Conversation: {{ $conversation->name }} - {{ $conversation->id }}</h2>
+        <h2 class="text-2xl mb-4">Conversation: {{ $conversation->name }}</h2>
 
         <!-- Search Form (Optional placement) -->
         <div class="mb-6">
@@ -26,7 +26,7 @@
                 <form method="POST" action="{{ route('conversation.addParticipants', $conversation->id) }}">
                     @csrf
                     <select name="user_ids[]" multiple class="w-full p-3 mt-2 border border-gray-300 rounded-md">
-                        @foreach ($allUsers as $user)
+                        @foreach ($allusers as $user)
                             <option value="{{ $user->id }}">{{ $user->name }}</option>
                         @endforeach
                     </select>
@@ -42,15 +42,25 @@
                 <div class="p-4 bg-gray-200 rounded shadow" id="message-{{ $message->id }}">
                     <strong>{{ $message->user->name }}: </strong>
                     <p>{{ $message->content }}</p>
+                    @if ($message->file_path)
+                        <div class="mt-2">
+                            <a href="{{ asset('storage/' . $message->file_path) }}" target="_blank"
+                                class="text-blue-600">View File</a>
+                        </div>
+                    @endif
                 </div>
             @endforeach
         </div>
 
         <!-- Message Form (Send New Message) -->
-        <form id="messageForm">
+        <form id="messageForm" method="POST" enctype="multipart/form-data">
             @csrf
             <input type="text" id="messageInput" name="message" placeholder="Type your message"
                 class="w-full p-2 border border-gray-300 rounded mt-2" required>
+
+            <!-- File Input for Attachments -->
+            <input type="file" id="fileInput" name="file" class="mt-2 p-3 rounded-md">
+
             <button type="submit" class="w-full bg-blue-600 text-white p-2 rounded mt-2">Send</button>
         </form>
     </div>
@@ -69,6 +79,12 @@
                     messageElement.classList.add('p-4', 'bg-gray-200', 'rounded', 'shadow');
                     messageElement.innerHTML =
                         `<strong>${message.user.name}:</strong> <p>${message.content}</p>`;
+
+                    // If there is a file, display the download link
+                    if (message.file_path) {
+                        messageElement.innerHTML +=
+                            `<div class="mt-2"><a href="${message.file_path}" target="_blank" class="text-blue-600">View File</a></div>`;
+                    }
 
                     // Append new message to the message container
                     document.getElementById('message-container').appendChild(messageElement);
@@ -99,18 +115,19 @@
 
                 const messageContent = document.getElementById('messageInput').value;
                 const conversationId = '{{ $conversation->id }}'; // Get the conversation ID from Blade
+                const fileInput = document.getElementById('fileInput').files[0]; // Get the selected file
+
+                // Create a FormData object to send the message and file
+                const formData = new FormData();
+                formData.append('message', messageContent);
+                formData.append('file', fileInput); // Append the file to the request
+                formData.append('conversation_id', conversationId);
+                formData.append('_token', '{{ csrf_token() }}'); // Append CSRF token
 
                 // Send the message via AJAX
                 fetch('{{ route('send.message', $conversation->id) }}', {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                        },
-                        body: JSON.stringify({
-                            message: messageContent,
-                            conversation_id: conversationId
-                        })
+                        body: formData
                     })
                     .then(response => response.json())
                     .then(data => {
@@ -118,6 +135,7 @@
 
                         // Clear the input field after sending the message
                         document.getElementById('messageInput').value = '';
+                        document.getElementById('fileInput').value = ''; // Clear the file input
                     })
                     .catch(error => {
                         console.error('Error sending message:', error);

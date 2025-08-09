@@ -29,6 +29,8 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/conversation/create', [ConversationController::class, 'create'])->name('conversation.create');
     Route::post('/conversation', [ConversationController::class, 'store'])->name('conversation.store');
+    Route::post('/conversation/{conversationId}/addParticipants', [ConversationController::class, 'addParticipants'])
+        ->name('conversation.addParticipants');
 
     Route::get('/profile', [ProfileController::class, 'showProfile'])->name('profile.show');
     Route::post('/profile', [ProfileController::class, 'updateProfile'])->name('profile.update');
