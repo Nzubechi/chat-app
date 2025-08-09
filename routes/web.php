@@ -21,6 +21,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/inbox', [ChatController::class, 'inbox'])->name('inbox');
     Route::get('/chat/{conversationId}', [ChatController::class, 'chatView'])->name('chat.view');
     Route::post('/chat/{conversationId}/send', [ChatController::class, 'sendMessage'])->name('send.message');
+    Route::post('/chat/{conversationId}/typingindicator', [ChatController::class, 'sendTypingIndicator'])->name('send.typingindicator');
     Route::get('/search', [SearchController::class, 'search'])->name('search');
 
     Route::post('/logout', function () {

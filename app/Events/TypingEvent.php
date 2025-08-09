@@ -4,6 +4,7 @@ namespace App\Events;
 
 use App\Models\Conversation;
 use App\Models\Message;
+use App\Models\User;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Queue\SerializesModels;
@@ -21,12 +22,11 @@ class TypingEvent implements ShouldBroadcast
     /**
      * Create a new event instance.
      */
-    public $message;
+    public $user;
     public $conversation;
-
-    public function __construct(Message $message, Conversation $conversation)
+    public function __construct(User $user, Conversation $conversation)
     {
-        $this->message = $message;
+        $this->user = $user;
         $this->conversation = $conversation;
     }
 
@@ -44,6 +44,7 @@ class TypingEvent implements ShouldBroadcast
     {
         return [
             'conversation' => $this->conversation,
+            'user' => $this->user,
         ];
     }
 }

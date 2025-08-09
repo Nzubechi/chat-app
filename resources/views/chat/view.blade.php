@@ -50,7 +50,7 @@
 
         <div class="flex flex-col h-[calc(100vh-280px)]"> <!-- Adjusting height between fixed navbar and footer -->
             <!-- Messages Container (Top, fills the remaining space) -->
-            <div class="space-y-4 mb-4 flex-grow overflow-y-auto max-h-[calc(100vh-160px)]" id="message-container">
+            <div class="space-y-4 mb-4 flex-grow overflow-y-auto" id="message-container">
                 @foreach ($messages as $message)
                     <div class="p-4 bg-gray-200 rounded shadow" id="message-{{ $message->id }}">
                         <strong>{{ $message->user->name }}: </strong>
@@ -65,25 +65,31 @@
                 @endforeach
             </div>
 
-            <!-- Message Form (Bottom, stays at the bottom of the remaining space) -->
-            <form id="messageForm" method="POST" enctype="multipart/form-data" class="flex items-center py-4 bg-white">
-                @csrf
+            <!-- Message Form (Bottom) -->
+            <div class="bg-white p-4">
+                <!-- Typing Indicator -->
+                <div id="typing-indicator" class="text-gray-500 mb-2 text-sm"></div>
 
-                <!-- Message Input -->
-                <input type="text" id="messageInput" name="message" placeholder="Type your message"
-                    class="p-2 w-full border border-gray-300 rounded-md" required>
+                <!-- Form -->
+                <form id="messageForm" method="POST" enctype="multipart/form-data" class="flex items-center space-x-2">
+                    @csrf
 
-                <!-- File Input for Attachments (Hidden, triggered by button) -->
-                <input type="file" id="fileInput" name="file" class="hidden" onchange="updateFileName()">
+                    <!-- Message Input -->
+                    <input type="text" id="messageInput" name="message" placeholder="Type your message"
+                        class="p-2 w-full border border-gray-300 rounded-md" required>
 
-                <!-- Custom File Upload Button -->
-                <button type="button" id="fileButton" class="bg-slate-500 text-white p-2 rounded-md mx-2">
-                    Upload
-                </button>
+                    <!-- File Input for Attachments (Hidden, triggered by button) -->
+                    <input type="file" id="fileInput" name="file" class="hidden" onchange="updateFileName()">
 
-                <!-- Send Button -->
-                <button type="submit" class="bg-blue-600 text-white p-2 rounded-md">Send</button>
-            </form>
+                    <!-- Custom File Upload Button -->
+                    <button type="button" id="fileButton" class="bg-slate-500 text-white p-2 rounded-md">
+                        Upload
+                    </button>
+
+                    <!-- Send Button -->
+                    <button type="submit" class="bg-blue-600 text-white p-2 rounded-md">Send</button>
+                </form>
+            </div>
         </div>
 
 
@@ -135,6 +141,7 @@
                     messageContainer = document.getElementById('message-container')
                     messageContainer.appendChild(messageElement);
                     messageContainer.scrollTop = messageContainer.scrollHeight;
+                    document.getElementById('typing-indicator').innerHTML = '';
                 })
                 .subscribed(() => {
                     console.log('Successfully subscribed to the conversation channel.');
@@ -148,7 +155,7 @@
                     document.getElementById('typing-indicator').innerText = `${event.user.name} is typing...`;
                 });
 
-            window.Echo.private(`user.'{{ $user->id }}`)
+            window.Echo.channel(`conversation.{{ $conversation->id }}`)
                 .listen('NewMessageNotification', (event) => {
                     // Display a notification for the new message
                     alert("event.message.content");
@@ -183,10 +190,37 @@
                         // Clear the input field after sending the message
                         document.getElementById('messageInput').value = '';
                         document.getElementById('fileInput').value = ''; // Clear the file input
+                        document.getElementById('typing-indicator').innerHTML = ''; // Clear the file input
                     })
                     .catch(error => {
                         console.error('Error sending message:', error);
                     });
+            });
+        });
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const messageInput = document.getElementById('messageInput');
+            const conversationId = '{{ $conversation->id }}'; // Get the conversation ID from Blade
+
+            // Send typing indicator when user starts typingx
+            messageInput.addEventListener('input', function() {
+                // Debounce the typing event (wait for 1 second of inactivity before sending the typing event)
+                clearTimeout(window.typingTimeout);
+                window.typingTimeout = setTimeout(function() {
+                    // Send Typing Event to the backend
+                    fetch('{{ route('send.typingindicator', $conversation->id) }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        },
+                        body: JSON.stringify({
+                            conversationId: conversationId
+                        })
+                    });
+                }, 1000); // 1 second debounce
             });
         });
     </script>

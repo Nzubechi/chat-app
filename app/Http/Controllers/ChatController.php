@@ -39,9 +39,10 @@ class ChatController extends Controller
 
     public function sendTypingIndicator(Request $request, $conversationId)
     {
-        broadcast(new TypingEvent($conversationId, Auth::user()->name));
+        $conversation = Conversation::findOrFail($conversationId);
+        broadcast(new TypingEvent($request->user(), $conversation));
 
-        return response()->json(['status' => 'success']);
+        return response()->json(['status' => 'Typing Event Broadcasted']);
     }
 
     public function sendMessage(Request $request, $conversationId)
