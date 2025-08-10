@@ -1,66 +1,188 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+# Workcity Chat
 
-## About Laravel
+Workcity Chat is a real-time chat application built with **Laravel 11** and **Laravel Echo** for real-time communication, enabling users to create conversations, send messages, and manage profiles.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Features
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- **Real-time messaging** using Laravel Echo and Pusher
+- **User authentication** (sign up, login, and logout)
+- **Profile management** (update user details, password, and avatar)
+- **Conversation management** (create and manage conversations)
+- **File uploads** (share files within conversations)
+- **Typing indicators** for real-time updates
+- **Search functionality** to find conversations and messages
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+---
 
-## Learning Laravel
+## Installation
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+Follow these steps to set up the project locally.
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+### Prerequisites
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+- PHP >= 8.1
+- Composer
+- Node.js (for managing frontend assets)
+- MySQL or another database
 
-## Laravel Sponsors
+### 1. Clone the Repository
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+```bash
+git clone https://github.com/your-username/workcity-chat.git
+cd workcity-chat
+```
 
-### Premium Partners
+### 2. Install Backend Dependencies
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+Run the following command to install all PHP dependencies using **Composer**:
 
-## Contributing
+```bash
+composer install
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### 3. Set Up Environment File
 
-## Code of Conduct
+Duplicate the `.env.example` file and rename it to `.env`:
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```bash
+cp .env.example .env
+```
 
-## Security Vulnerabilities
+Then, open the `.env` file and configure the following:
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+- **APP_NAME**, **APP_URL**: Set your application name and URL.
+- **DB_CONNECTION**, **DB_HOST**, **DB_PORT**, **DB_DATABASE**, **DB_USERNAME**, **DB_PASSWORD**: Set your database credentials.
+- **BROADCAST_DRIVER**: Set to `pusher` for real-time broadcasting.
+- **PUSHER_APP_ID**, **PUSHER_APP_KEY**, **PUSHER_APP_SECRET**, **PUSHER_APP_CLUSTER**: Set your Pusher credentials (you can get these from Pusher's dashboard).
+
+### 4. Generate Application Key
+
+Run the following command to generate a new application key:
+
+```bash
+php artisan key:generate
+```
+
+### 5. Set Up the Database
+
+Run the migration command to create the necessary tables:
+
+```bash
+php artisan migrate
+```
+
+You can also seed the database with test data:
+
+```bash
+php artisan db:seed
+```
+
+### 6. Set Up File Storage
+
+Create a symbolic link to store uploaded files:
+
+```bash
+php artisan storage:link
+```
+
+### 7. Install Frontend Dependencies
+
+Navigate to the `frontend` folder and run the following commands to install Node.js dependencies:
+
+```bash
+cd frontend
+npm install
+```
+
+Then, compile the assets:
+
+```bash
+npm run dev
+```
+
+### 8. Run the Development Server
+
+Start the Laravel development server:
+
+```bash
+php artisan serve
+```
+
+The application will be available at **http://127.0.0.1:8000**.
+
+---
+
+## Usage
+
+### Authentication
+
+- **Sign Up**: Users can create an account by providing their name, email, and password.
+- **Login**: Users can log in using their email and password.
+- **Logout**: Users can log out from the application.
+
+### Messaging
+
+- **Conversations**: Users can create new conversations and send messages to each other.
+- **File Uploads**: Users can upload files (images, documents) in a conversation.
+- **Typing Indicators**: When a user is typing, other users in the conversation will see a real-time typing indicator.
+
+### Profile Management
+
+- **View Profile**: Users can view their profile and update their information (name, email, and password).
+- **Avatar**: Users can upload or update their profile picture.
+
+### Real-time Updates
+
+- **Laravel Echo and Pusher**: The chat system uses **Pusher** for broadcasting messages and typing indicators in real time.
+
+---
+
+## File Structure
+
+```
+/app
+    /Models                # Eloquent models for the application
+    /Http
+        /Controllers       # Controllers for handling requests
+        /Middleware        # Custom middleware (e.g., for role-based access)
+    /Notifications         # Notification classes for sending messages and updates
+    /Events                # Events for broadcasting real-time actions (e.g., new message)
+    /Broadcasting          # Channels for broadcasting events (e.g., chat channels)
+/resources
+    /views                 # Blade templates for frontend (e.g., chat view, profile page)
+/routes
+    web.php                # All application routes
+```
+
+---
+
+## Environment Configuration
+
+Make sure to configure the following environment variables in your `.env` file:
+
+```
+APP_NAME=Workcity Chat
+APP_URL=http://127.0.0.1:8000
+
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=workcity_chat
+DB_USERNAME=root
+DB_PASSWORD=
+
+BROADCAST_DRIVER=pusher
+PUSHER_APP_ID=your-pusher-app-id
+PUSHER_APP_KEY=your-pusher-app-key
+PUSHER_APP_SECRET=your-pusher-app-secret
+PUSHER_APP_CLUSTER=mt1
+```
+
+---
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
