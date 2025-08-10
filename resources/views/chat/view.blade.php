@@ -122,7 +122,6 @@
             window.Echo.channel(`conversation.{{ $conversation->id }}`)
                 .listen('MessageSent', (event) => {
                     const message = event.message;
-                    console.log("Message:", event);
 
                     // Create a new message element and append to the container
                     const messageElement = document.createElement('div');
@@ -158,6 +157,7 @@
             window.Echo.channel(`conversation.{{ $conversation->id }}`)
                 .listen('NewMessageNotification', (event) => {
                     // Display a notification for the new message
+                    console.log('New message received:', event);
                     alert("event.message.content");
                 });
 

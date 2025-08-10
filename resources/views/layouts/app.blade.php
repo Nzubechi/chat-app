@@ -24,6 +24,8 @@
             <div class="space-x-4">
                 @auth
                     <a href="{{ route('inbox') }}" class="hover:underline">Inbox</a>
+                    <!-- Profile Link -->
+                    <a href="{{ route('profile.show') }}" class="hover:underline">Profile</a>
                     <!-- Logout Button -->
                     <form action="{{ route('logout') }}" method="POST" class="inline">
                         @csrf
@@ -36,6 +38,7 @@
             </div>
         </div>
     </header>
+
 
 
     <!-- Main Content Section -->

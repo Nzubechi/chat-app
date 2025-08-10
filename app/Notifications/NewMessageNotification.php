@@ -4,12 +4,14 @@ namespace App\Notifications;
 
 use App\Models\Message;
 use Illuminate\Bus\Queueable;
+use Illuminate\Broadcasting\Channel;
 use Illuminate\Notifications\Notification;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Notifications\Messages\BroadcastMessage;
 
-class NewMessageNotification extends Notification
+class NewMessageNotification extends Notification implements ShouldBroadcast
 {
     use Queueable;
 
@@ -62,5 +64,20 @@ class NewMessageNotification extends Notification
             'message' => $this->message,
             'conversation_id' => $this->message->conversation_id,
         ]);
+    }
+
+    public function broadcastOn()
+    {
+        // Broadcast on the conversation channel
+        return new Channel('conversation.' . $this->message->conversation_id);
+    }
+
+    public function broadcastWith()
+    {
+        return [
+            'message' => $this->message->content,
+            'user' => $this->message->user->name,  // Send the user's name who sent the message
+            'file_path' => $this->message->file_path,  // Optional: Send file path if there’s an attachment
+        ];
     }
 }
